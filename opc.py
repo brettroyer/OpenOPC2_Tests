@@ -15,6 +15,9 @@ logger = setupLogger(name='main.opclogger')
 
 @dataclass()
 class opcData(object):
+    """
+    Dataclass for storing data read via OPC
+    """
 
     def __init__(self, v=None, error=None):
         self._v = v
@@ -34,10 +37,17 @@ class opcData(object):
             return "multiple"
 
     @property
+    def isMultiple(self):
+        if isinstance(self._v, list):
+            return True
+        return False
+
+    @property
     def value(self):
         if isinstance(self._v, tuple):
             return self._v[0]
         elif isinstance(self._v, list):
+            # values = [value[1] for value in self._v]
             return None
 
     @property
@@ -45,14 +55,15 @@ class opcData(object):
         if isinstance(self._v, tuple):
             return self._v[1]
         elif isinstance(self._v, list):
-            status = [value[2] for value in self._v]
-            return status
+            # status = [value[2] for value in self._v]
+            return None
 
     @property
     def timestamp(self):
         if isinstance(self._v, tuple):
             return datetime.fromisoformat(self._v[2])
         elif isinstance(self._v, list):
+            # timestamps = [value[3] for value in self._v]
             return None
 
 
@@ -114,6 +125,9 @@ class OpcBase(object):
         except ProtocolError as e:
             logger.debug(e)
 
+        except OPCError as e:
+            logger.debug(e)
+
         except Exception as e:
             logger.debug(f"Unknown Connect Exception: {e}")
 
@@ -140,14 +154,13 @@ class OpcBase(object):
                 _v = self.opc.read(readdata, timeout=self.timeout, sync=sync)
             except TimeoutError as e:
                 _error = e
-                logger.info('OPC TimeoutError')
+                logger.debug(f'OPC TimeoutError: {e}')
             except OPCError as e:
                 _error = e
                 logger.debug(f'OPC Tag Read Error: {e}')
             except Exception as e:
                 _error = e
-                logger.debug('Some assigned modules may be disconnected')
-                logger.debug('OPC Tag Read Error: {}'.format(e))
+                logger.debug(f'Read Unknown Exception: {e}')
 
         data = opcData(_v, _error)
         return data
@@ -161,8 +174,8 @@ class Opc(OpcBase):
 
 class OpcTest(OpcBase):
 
-    def __init__(self):
-        super(OpcTest, self).__init__()
+    def __init__(self, svr: str = None, ip: str = None, mode: str = 'com', connect: bool = True):
+        super().__init__(svr, ip, mode, connect)
         self.paths = "*"
         self.limit = False
         self.n_reads = 1
@@ -186,6 +199,7 @@ class OpcTest(OpcBase):
         return self.opc.info()
 
     def main(self):
+        pass
 
         # if limit:
         #     tags = tags[:limit]
@@ -199,11 +213,11 @@ class OpcTest(OpcBase):
         #     read = self.read(tag, sync=self.sync)
         #     logger.info(f'{n:3} {time.time() - start:.3f}s {tag} {read}')
 
-        logger.info("READ: LIST")
-        for n in range(self.n_reads):
-            start = time.time()
-            read = self.read(self.tags, sync=self.sync)
-            logger.info(f'{n:3} {time.time() - start:.3f}s {read}')
+        # logger.info("READ: LIST")
+        # for n in range(self.n_reads):
+        #     start = time.time()
+        #     read = self.read(self.tags, sync=self.sync)
+        #     logger.info(f'{n:3} {time.time() - start:.3f}s {read}')
 
         # logger.info("PROPERTIES:")
         # for n, tag in enumerate(tags):
@@ -219,5 +233,5 @@ class OpcTest(OpcBase):
 
 
 if __name__ == '__main__':
-    opc = OpcTest()
+    opc = OpcTest(svr='OPC.DeltaV.1', ip='192.168.1.10', mode='gateway')
     opc.run()
