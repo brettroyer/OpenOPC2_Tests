@@ -83,8 +83,9 @@ class OpcBase(object):
 
     def _config(self) -> OpenOpcConfig:
         config = OpenOpcConfig()
+        # config.OPC_SERVER = "OPC.DeltaV.1" if self.svr is None else self.svr
         config.OPC_SERVER = "Matrikon.OPC.Simulation" if self.svr is None else self.svr
-        config.OPC_GATEWAY_HOST = "192.168.0.115" if self.ip is None else self.ip
+        config.OPC_GATEWAY_HOST = "192.168.1.10" if self.ip is None else self.ip
         config.OPC_CLASS = "Graybox.OPC.DAWrapper"
         config.OPC_MODE = self.mode
         return config
@@ -161,8 +162,8 @@ class Opc(OpcBase):
 
 class OpcTest(OpcBase):
 
-    def __init__(self):
-        super(OpcTest, self).__init__()
+    def __init__(self, svr: str = None, ip: str = None, mode: str = 'com', connect: bool = True):
+        super().__init__(svr, ip, mode, connect)
         self.paths = "*"
         self.limit = False
         self.n_reads = 1
@@ -219,5 +220,5 @@ class OpcTest(OpcBase):
 
 
 if __name__ == '__main__':
-    opc = OpcTest()
+    opc = OpcTest(svr="OPC.DeltaV.1")
     opc.run()
