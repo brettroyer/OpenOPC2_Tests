@@ -94,8 +94,9 @@ class OpcBase(object):
 
     def _config(self) -> OpenOpcConfig:
         config = OpenOpcConfig()
+        # config.OPC_SERVER = "OPC.DeltaV.1" if self.svr is None else self.svr
         config.OPC_SERVER = "Matrikon.OPC.Simulation" if self.svr is None else self.svr
-        config.OPC_GATEWAY_HOST = "192.168.0.115" if self.ip is None else self.ip
+        config.OPC_GATEWAY_HOST = "192.168.1.10" if self.ip is None else self.ip
         config.OPC_CLASS = "Graybox.OPC.DAWrapper"
         config.OPC_MODE = self.mode
         return config
