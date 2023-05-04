@@ -120,8 +120,10 @@ class OpcBase(object):
                 self._opc = OpcDaClient(self.config)
                 logger.info("Connecting in COM Mode")
 
-            connected = self._opc.connect(self.config.OPC_SERVER, self.config.OPC_HOST)
+            self._opc.connect(self.config.OPC_SERVER, self.config.OPC_HOST)
             self._connected = True
+            logger.info(self._opc.info())
+            logger.info(f"Connected to {self.config.OPC_SERVER}")
 
         except ProtocolError as e:
             logger.debug(e)
@@ -200,6 +202,7 @@ class OpcTest(OpcBase):
         return self.opc.info()
 
     def main(self):
+        logger.info(self.read("FIC1601/PID1/PV.CV"))
         pass
 
         # if limit:
