@@ -8,6 +8,7 @@ import functools
 from dataclasses import dataclass
 from typing import Union
 from datetime import datetime
+from options import optobj
 
 from logger import setupLogger
 logger = setupLogger(name='main.opclogger')
@@ -76,11 +77,8 @@ class OpcBase(object):
 
     signal = PySignals(name="OPC Signals")
 
-    def __init__(self, svr: str = None, ip: str = None, mode: str = 'com', connect: bool = True):
-        self.svr = svr
-        self.ip = ip
-        self.mode = mode
-        self.timeout = 5*1000
+    def __init__(self, options: type[optobj], connect: bool = True):
+        self.options = options
         self.config = self._config()
         self._connected = False
         self._opc = None
@@ -95,10 +93,10 @@ class OpcBase(object):
     def _config(self) -> OpenOpcConfig:
         config = OpenOpcConfig()
         # config.OPC_SERVER = "OPC.DeltaV.1" if self.svr is None else self.svr
-        config.OPC_SERVER = "Matrikon.OPC.Simulation" if self.svr is None else self.svr
-        config.OPC_GATEWAY_HOST = "192.168.1.10" if self.ip is None else self.ip
+        config.OPC_SERVER = "Matrikon.OPC.Simulation" if self.options.svr is None else self.options.svr
+        config.OPC_GATEWAY_HOST = "192.168.1.10" if self.options.ip is None else self.options.ip
         config.OPC_CLASS = "Graybox.OPC.DAWrapper"
-        config.OPC_MODE = self.mode
+        config.OPC_MODE = self.options.mode
         return config
 
     @property
@@ -110,7 +108,7 @@ class OpcBase(object):
         return self._connected
 
     def connect(self) -> None:
-        logger.info(f'Attempting Connection to {self.svr}')
+        logger.info(f'Attempting Connection to {self.config.OPC_SERVER}')
         try:
             if self.config.OPC_MODE == "gateway":
                 self._opc = OpenOpcGatewayProxy(self.config.OPC_GATEWAY_HOST,
@@ -154,7 +152,7 @@ class OpcBase(object):
         if self.connected:
             """ For reading single or list instance """
             try:
-                _v = self.opc.read(readdata, timeout=self.timeout, sync=sync)
+                _v = self.opc.read(readdata, timeout=self.options.timeout, sync=sync)
             except TimeoutError as e:
                 _error = e
                 logger.debug(f'OPC TimeoutError: {e}')
@@ -171,14 +169,15 @@ class OpcBase(object):
 
 class Opc(OpcBase):
 
-    def __init__(self, options):
-        super(Opc, self).__init__()
+    def __init__(self, options: type[optobj], connect: bool = True):
+        super().__init__(options, connect)
+        pass
 
 
 class OpcTest(OpcBase):
 
-    def __init__(self, svr: str = None, ip: str = None, mode: str = 'com', connect: bool = True):
-        super().__init__(svr, ip, mode, connect)
+    def __init__(self, options: type[optobj], connect: bool = True):
+        super().__init__(options, connect)
         self.paths = "*"
         self.limit = False
         self.n_reads = 1
@@ -237,5 +236,13 @@ class OpcTest(OpcBase):
 
 
 if __name__ == '__main__':
-    opc = OpcTest(svr='OPC.DeltaV.1', ip='192.168.1.10', mode='gateway')
+    options = optobj
+    options.svr = 'OPC.DeltaV.1'
+    options.ip = '192.168.1.10'
+    options.mode = 'gateway'  # TODO: Update Main Options with new parameter mode,  remove local
+    options.sleepTime = 1
+    options.timeout = 5000 * 4
+    options.sliceamt = 1000
+    # TODO: Add sleep and counter to OPC Class parameters.
+    opc = OpcTest(options)
     opc.run()
