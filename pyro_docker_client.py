@@ -1,7 +1,12 @@
 from Pyro5.api import Proxy
-import Pyro5.errors
 
-uri = input("Enter the URI of the thirdparty library object: ").strip()
+# from pyro_docker_serializer import *
 
-with Proxy(uri) as remote:
-    pass
+
+uri = 'PYRO:remote.docker@192.168.1.50:8050'
+
+
+if __name__ == '__main__':
+    with Proxy(uri) as remote:
+        client = remote.from_env()
+        client.images.list()

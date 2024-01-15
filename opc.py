@@ -6,9 +6,10 @@ from signals import PySignals
 import time
 import functools
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Type
 from datetime import datetime
 from options import optobj
+import json
 
 from logger import setupLogger
 logger = setupLogger(name='main.opclogger')
@@ -77,7 +78,7 @@ class OpcBase(object):
 
     signal = PySignals(name="OPC Signals")
 
-    def __init__(self, options: type[optobj], connect: bool = True):
+    def __init__(self, options: Type[optobj], connect: bool = False):
         self.options = options
         self.config = self._config()
         self._connected = False
@@ -111,11 +112,11 @@ class OpcBase(object):
         logger.info(f'Attempting Connection to {self.config.OPC_SERVER}')
         try:
             if self.config.OPC_MODE == "gateway":
-                self._opc = OpenOpcGatewayProxy(self.config.OPC_GATEWAY_HOST,
-                                                    self.config.OPC_GATEWAY_PORT).get_opc_da_client_proxy()
+                self._opc = OpenOpcGatewayProxy(self.config.OPC_GATEWAY_HOST, self.config.OPC_GATEWAY_PORT).get_opc_da_client_proxy()
                 logger.info("Connecting in Gateway Mode")
             else:
                 self._opc = OpcDaClient(self.config)
+                # self._opc.set_trace(True)
                 logger.info("Connecting in COM Mode")
 
             self._opc.connect(self.config.OPC_SERVER, self.config.OPC_HOST)
@@ -166,31 +167,83 @@ class OpcBase(object):
         data = opcData(_v, _error)
         return data
 
+    def write_to_json(self, infile: str, data):
+        logger.info('Writing File to {}'.format(infile))
+        with open(infile, 'w') as fp:
+            json.dump(data, fp)
+
+    def read_from_json(self, json_file: str) -> dict:
+        logger.info('Reading {} from file'.format(json_file))
+        with open(json_file, 'r') as fp:
+            return json.load(fp)
+
+    @staticmethod
+    def list_to_file(inlist, outfile):
+        """
+        File created from input list.
+        :param. inlist = python list to be written to file
+        :return None"""
+
+        if outfile != '':
+            filecount = 0
+            filenm = outfile[:(outfile.rfind("."))]
+            fileext = outfile[(outfile.rfind(".")):]
+
+            try:
+                out_file = open(outfile, 'w')
+            except IOError:
+                filecount += 1
+                out_file = ''.join([filenm, str(filecount), fileext])
+
+            for line in inlist:
+                out_file.write('{}\n'.format(line.strip()))
+            out_file.close()
+
+    @staticmethod
+    def list_from_file(filename: str) -> list:
+        """
+        Create python list from .txt file.
+
+        :param filename = filename.txt or other text input
+        :return List = Python List of filename content
+         """
+        with open(filename, 'r', encoding='utf-8', errors='ignore') as In_File:
+            # x = []
+            # for line in In_File:
+            #     x.append(line.strip().rstrip())
+            #
+            x = [line.strip().rstrip() for line in In_File]
+        return x
+
 
 class Opc(OpcBase):
 
-    def __init__(self, options: type[optobj], connect: bool = True):
+    def __init__(self, options: Type[optobj], connect: bool = True):
         super().__init__(options, connect)
         pass
 
 
 class OpcTest(OpcBase):
 
-    def __init__(self, options: type[optobj], connect: bool = True):
+    def __init__(self, options: Type[optobj], connect: bool = True):
         super().__init__(options, connect)
         self.paths = "*"
         self.limit = False
         self.n_reads = 1
         self.sync = False
+        self.read = False
 
     def run(self):
-        self.main()
+        tags = self.list_from_file('tags.txt')
+        self.read = True
+        self.read_tags(tags, 'Simulation')
         self.close()
 
     @functools.cached_property
     def tags(self):
         """
         Return flat list of tags form the OPC Simulator
+
         :return:
         """
         tags = self.opc.list(paths=self.paths, recursive=False, include_type=False, flat=True)
@@ -202,7 +255,6 @@ class OpcTest(OpcBase):
 
     def main(self):
         logger.info(self.read("FIC1601/PID1/PV.CV"))
-        pass
 
         # if limit:
         #     tags = tags[:limit]
@@ -234,11 +286,38 @@ class OpcTest(OpcBase):
         #     properties = self.opc.properties(self.tags)
         #     logger.info(f'{n} {time.time() - start:.3f}s {properties}')
 
+    def read_tags(self, tags: list, group: str = 'Dummy'):
+        """
+        example point: tuple (tagname, data*, status, timestamp)
+        TODO: type check data.
+        :param tags: list of tags to scan
+        :param group: Groupname for tags.
+        :return: None
+        """
 
-if __name__ == '__main__':
+        while self.read:
+            data = self.opc.read(tags, group=group)
+            points = []
+            for point in data:
+                points.append({
+                    "measurement": "data",  # Group
+                    "tags": {"location": "Port Neches"},  # "path": opc path
+                    "fields": {point[0]: point[1]}, # Tagname : Data
+                    "time": point[3]  # OPC Time Field
+                })
+
+            time.sleep(2)
+
+
+    def write_tags(self):
+        pass
+
+
+def main():
     options = optobj
-    options.svr = 'OPC.DeltaV.1'
-    options.ip = '192.168.1.10'
+    # options.svr = 'OPC.DeltaV.1'
+    options.svr = 'Matrikon.OPC.Simulation.1'
+    options.ip = '192.168.1.2'
     options.mode = 'gateway'  # TODO: Update Main Options with new parameter mode,  remove local
     options.sleepTime = 1
     options.timeout = 5000 * 4
@@ -246,3 +325,7 @@ if __name__ == '__main__':
     # TODO: Add sleep and counter to OPC Class parameters.
     opc = OpcTest(options)
     opc.run()
+
+
+if __name__ == '__main__':
+    main()
