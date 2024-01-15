@@ -1,7 +1,0 @@
-influxdb_client==1.38.0
-paho_mqtt==1.5.0
-pendulum==3.0.0
-python_dateutil==2.8.2
-rich==13.7.0
-PySignal @ git+https://github.com/dgovil/PySignal.git
-openopc2==0.1.11
