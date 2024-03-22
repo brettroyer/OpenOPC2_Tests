@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+    deltav:
+        #build: .
+        restart: always
+        container_name: deltav
+        #ports:
+            # May have to open OPCUA Ports
+            #- '8005:8003'
+        #volumes:
+            #- "C:/Users/d1fk67/Documents/PYTHON/Work/OpenOPC2_Tests:/app"
+        image: python:latest

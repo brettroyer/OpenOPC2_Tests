@@ -158,17 +158,13 @@ class OpcBase(object):
     async def close(self) -> None:
         if self.connected:
             # logger.info(f"Closing Connection to {self.config.OPC_SERVER}")
-            for x in range(2):
-                try:
-                    await self.client.disconnect()
-                    self._connected = False
-                    self.options.connected = False  # Update Global Options
-                    self.options.opc_test_ok = False  # Update Global Options
-                    self.server = None
-                    # logger.info(f"Connection Closed to {self.config.OPC_SERVER}")
-                except Exception as e:
-                    pass
-                    # logger.debug(f"Unknown Close Exception: {e}")
+
+            await self.client.disconnect()
+            self._connected = False
+            self.options.connected = False  # Update Global Options
+            self.options.opc_test_ok = False  # Update Global Options
+            self.server = None
+            # logger.info(f"Connection Closed to {self.config.OPC_SERVER}")
 
     def restart(self):
         pass
