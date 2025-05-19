@@ -14,28 +14,29 @@ class SubHandler(object):
 
 def parse_blockerr_data(data: int):
     """
-	Parse DeltaV's BLOCK_ERR into usable errors.
+        Parse DeltaV's BLOCK_ERR into usable errors.
 
-	 BLOCK_ERROR = 16 bits (15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0)
-	 bit#0 - Out Of Service
-	 bit#1 - Power Up
-	 bit#2 - Device Needs Maintenance Now
-	 bit#3 - Readback Failed
-	 bit#4 - Lost Non-Volatile Data
-	 bit#5 - Lost Status Data
-	 bit#6 - Memory Failure
-	 bit#7 - Output Failure
-	 bit#8 - Input Failure/Bad PV
-	 bit#9 - Device Needs Maintenance Soon
-	 bit#10 - Device Fault State Set
-	 bit#11 - Local Overide
-	 bit#12 - Simulate Active
-	 bit#13 - Link Configuration Error
-	 bit#14 - Configuration Error
-	 bit#15 - Other Error
+         BLOCK_ERROR = 16 bits (15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0)
+         bit#0 - Out Of Service
+         bit#1 - Power Up
+         bit#2 - Device Needs Maintenance Now
+         bit#3 - Readback Failed
+         bit#4 - Lost Non-Volatile Data
+         bit#5 - Lost Status Data
+         bit#6 - Memory Failure
+         bit#7 - Output Failure
+         bit#8 - Input Failure/Bad PV
+         bit#9 - Device Needs Maintenance Soon
+         bit#10 - Device Fault State Set
+         bit#11 - Local Overide
+         bit#12 - Simulate Active
+         bit#13 - Link Configuration Error
+         bit#14 - Configuration Error
+         bit#15 - Other Error
 
-	:data: int - int representing the Block Error code
-	"""
+        :data: int - int representing the Block Error code
+    """
+
     _dict = {
         0: 'Out Of Service',
         1: 'Power Up',

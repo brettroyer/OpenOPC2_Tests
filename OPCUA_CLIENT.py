@@ -71,7 +71,6 @@ class KeepAlive(Thread):
             _logger.debug("server state is: %s ", val)
         _logger.debug("keepalive thread has stopped")
 
-
     def stop(self):
         _logger.debug("stoping keepalive thread")
         self._dostop = True
@@ -675,9 +674,8 @@ class Client(object):
                 result.check()
 
 
-
-def main(server):
-    client = Client(server)
+def main(svr):
+    client = Client(svr)
     client.connect()
     ns = client.get_namespace_array()[2]
     idx = client.get_namespace_index(ns)

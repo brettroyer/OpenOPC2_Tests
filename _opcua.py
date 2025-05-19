@@ -118,7 +118,6 @@ class OpcBase(object):
         if connect:
             self.connect()
 
-
     def __repr__(self):
         if self.options.connected:
             return "{} Connected".format(self.options.svr)

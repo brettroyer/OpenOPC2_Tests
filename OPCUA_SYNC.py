@@ -213,7 +213,7 @@ def main_old():
 
 
 def get_client(svr):
-    client = Client(server)
+    client = Client(svr)
     client.description = "DeltaV OPCUA"
 
     try:
